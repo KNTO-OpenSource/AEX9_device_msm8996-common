@@ -1,0 +1,210 @@
+#
+# Copyright (C) 2016 The CyanogenMod Project
+# Copyright (C) 2017-2018 The LineageOS Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This contains the module build definitions for the hardware-specific
+# components for this device.
+#
+# As much as possible, those components should be built unconditionally,
+# with device-specific names to avoid collisions, to avoid device-specific
+# bitrot and build breakages. Building a component unconditionally does
+# *not* include it on all devices, so it is safe even with hardware-specific
+# components.
+
+LOCAL_PATH := $(call my-dir)
+
+ifneq ($(filter x2 zl1, $(TARGET_DEVICE)),)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
+
+include $(CLEAR_VARS)
+
+# A/B builds require us to create the mount points at compile time.
+# Just creating it for all cases since it does not hurt.
+FIRMWARE_MOUNT_POINT := $(TARGET_OUT_VENDOR)/firmware_mnt
+BT_FIRMWARE_MOUNT_POINT := $(TARGET_OUT_VENDOR)/bt_firmware
+DSP_MOUNT_POINT := $(TARGET_OUT_VENDOR)/dsp
+
+$(FIRMWARE_MOUNT_POINT):
+	@echo "Creating $(FIRMWARE_MOUNT_POINT)"
+	@mkdir -p $(TARGET_OUT_VENDOR)/firmware_mnt
+
+$(BT_FIRMWARE_MOUNT_POINT):
+	@echo "Creating $(BT_FIRMWARE_MOUNT_POINT)"
+	@mkdir -p $(TARGET_OUT_VENDOR)/bt_firmware
+
+$(DSP_MOUNT_POINT):
+	@echo "Creating $(DSP_MOUNT_POINT)"
+	@mkdir -p $(TARGET_OUT_VENDOR)/dsp
+
+ALL_DEFAULT_INSTALLED_MODULES += $(FIRMWARE_MOUNT_POINT) $(BT_FIRMWARE_MOUNT_POINT) $(DSP_MOUNT_POINT)
+
+ADSP_IMAGES := adsp.b00 adsp.b01 adsp.b02 adsp.b03 adsp.b04 adsp.b05 adsp.b06 adsp.b08 adsp.b09 adsp.mdt
+ADSP_SYMLINKS := $(addprefix $(TARGET_OUT_ETC)/firmware/,$(notdir $(ADSP_IMAGES)))
+$(ADSP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "ADSP firmware link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/firmware_mnt/image/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(ADSP_SYMLINKS)
+
+FIDOTAP_IMAGES := fidotap.b00 fidotap.b01 fidotap.b02 fidotap.b03 fidotap.b04 fidotap.b05 fidotap.b06 fidotap.mdt
+FIDOTAP_SYMLINKS := $(addprefix $(TARGET_OUT_ETC)/firmware/,$(notdir $(FIDOTAP_IMAGES)))
+$(FIDOTAP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "FIDOTAP firmware link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/firmware_mnt/image/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(FIDOTAP_SYMLINKS)
+
+GOODIXFP_IMAGES := goodixfp.b00 goodixfp.b01 goodixfp.b02 goodixfp.b03 goodixfp.b04 goodixfp.b05 goodixfp.b06 goodixfp.mdt
+GOODIXFP_SYMLINKS := $(addprefix $(TARGET_OUT_ETC)/firmware/,$(notdir $(GOODIXFP_IMAGES)))
+$(GOODIXFP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "GOODIXFP firmware link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/firmware_mnt/image/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(GOODIXFP_SYMLINKS)
+
+IMS_LIBS := libimscamera_jni.so libimsmedia_jni.so
+IMS_SYMLINKS := $(addprefix $(TARGET_OUT_APPS_PRIVILEGED)/ims/lib/arm64/,$(notdir $(IMS_LIBS)))
+$(IMS_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "IMS lib link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/lib64/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(IMS_SYMLINKS)
+
+MDTP_IMAGES := mdtp.b00 mdtp.b01 mdtp.b02 mdtp.b03 mdtp.b04 mdtp.b05 mdtp.b06 mdtp.mdt
+MDTP_SYMLINKS := $(addprefix $(TARGET_OUT_ETC)/firmware/,$(notdir $(MDTP_IMAGES)))
+$(MDTP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "MDTP firmware link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/firmware_mnt/image/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(MDTP_SYMLINKS)
+
+RFS_MSM_ADSP_SYMLINKS := $(TARGET_OUT_VENDOR)/rfs/msm/adsp/
+$(RFS_MSM_ADSP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "Creating RFS MSM ADSP folder structure: $@"
+	@rm -rf $@/*
+	@mkdir -p $(dir $@)/readonly/vendor
+	$(hide) ln -sf /data/vendor/tombstones/rfs/lpass $@/ramdumps
+	$(hide) ln -sf /mnt/vendor/persist/rfs/msm/adsp $@/readwrite
+	$(hide) ln -sf /mnt/vendor/persist/rfs/shared $@/shared
+	$(hide) ln -sf /mnt/vendor/persist/hlos_rfs/shared $@/hlos
+	$(hide) ln -sf /vendor/firmware_mnt $@/readonly/firmware
+	$(hide) ln -sf /vendor/firmware $@/readonly/vendor/firmware
+
+RFS_MSM_CDSP_SYMLINKS := $(TARGET_OUT_VENDOR)/rfs/msm/cdsp/
+$(RFS_MSM_CDSP_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "Creating RFS MSM CDSP folder structure: $@"
+	@rm -rf $@/*
+	@mkdir -p $(dir $@)/readonly/vendor
+	$(hide) ln -sf /data/vendor/tombstones/rfs/cdsp $@/ramdumps
+	$(hide) ln -sf /mnt/vendor/persist/rfs/msm/cdsp $@/readwrite
+	$(hide) ln -sf /mnt/vendor/persist/rfs/shared $@/shared
+	$(hide) ln -sf /mnt/vendor/persist/hlos_rfs/shared $@/hlos
+	$(hide) ln -sf /vendor/firmware_mnt $@/readonly/firmware
+	$(hide) ln -sf /vendor/firmware $@/readonly/vendor/firmware
+
+RFS_MSM_MPSS_SYMLINKS := $(TARGET_OUT_VENDOR)/rfs/msm/mpss/
+$(RFS_MSM_MPSS_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "Creating RFS MSM MPSS folder structure: $@"
+	@rm -rf $@/*
+	@mkdir -p $(dir $@)/readonly/vendor
+	$(hide) ln -sf /data/vendor/tombstones/rfs/modem $@/ramdumps
+	$(hide) ln -sf /mnt/vendor/persist/rfs/msm/mpss $@/readwrite
+	$(hide) ln -sf /mnt/vendor/persist/rfs/shared $@/shared
+	$(hide) ln -sf /mnt/vendor/persist/hlos_rfs/shared $@/hlos
+	$(hide) ln -sf /vendor/firmware_mnt $@/readonly/firmware
+	$(hide) ln -sf /vendor/firmware $@/readonly/vendor/firmware
+
+RFS_MSM_SLPI_SYMLINKS := $(TARGET_OUT_VENDOR)/rfs/msm/slpi/
+$(RFS_MSM_SLPI_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "Creating RFS MSM SLPI folder structure: $@"
+	@rm -rf $@/*
+	@mkdir -p $(dir $@)/readonly/vendor
+	$(hide) ln -sf /data/vendor/tombstones/rfs/modem $@/ramdumps
+	$(hide) ln -sf /mnt/vendor/persist/rfs/msm/slpi $@/readwrite
+	$(hide) ln -sf /mnt/vendor/persist/rfs/shared $@/shared
+	$(hide) ln -sf /mnt/vendor/persist/hlos_rfs/shared $@/hlos
+	$(hide) ln -sf /vendor/firmware_mnt $@/readonly/firmware
+	$(hide) ln -sf /vendor/firmware $@/readonly/vendor/firmware
+
+ALL_DEFAULT_INSTALLED_MODULES += $(RFS_MSM_ADSP_SYMLINKS) $(RFS_MSM_CDSP_SYMLINKS) $(RFS_MSM_MPSS_SYMLINKS) $(RFS_MSM_SLPI_SYMLINKS)
+
+VENUS_IMAGES := venus.b00 venus.b01 venus.b02 venus.b03 venus.b04 venus.mdt
+VENUS_SYMLINKS := $(addprefix $(TARGET_OUT_VENDOR)/firmware/,$(notdir $(VENUS_IMAGES)))
+$(VENUS_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
+	@echo "VENUS firmware link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/firmware_mnt/image/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(VENUS_SYMLINKS)
+
+WCNSS_INI_SYMLINK := $(TARGET_OUT_VENDOR)/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini
+$(WCNSS_INI_SYMLINK): $(LOCAL_INSTALLED_MODULE)
+	@echo "WCNSS config ini link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /vendor/etc/wifi/$(notdir $@) $@
+
+WCNSS_MAC_SYMLINK := $(TARGET_OUT_VENDOR)/firmware/wlan/qca_cld/wlan_mac.bin
+$(WCNSS_MAC_SYMLINK): $(LOCAL_INSTALLED_MODULE)
+	@echo "WCNSS MAC bin link: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf /mnt/vendor/persist/$(notdir $@) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(WCNSS_INI_SYMLINK) $(WCNSS_MAC_SYMLINK)
+
+###########################################################
+## Commands for copying files
+###########################################################
+
+# Define a rule to create a symlink.  For use via $(eval).
+# $(1): symlink target
+# $(2): symlink file name
+define create-symlink
+$(2):
+	@echo "Symbolic link: $2 -> $1"
+	mkdir -p $(dir $2)
+	rm -rf $2
+	ln -sf $1 $2
+endef
+
+# -----------------------------------------------------------------
+# Define rules to create BOARD_SYSTEM_EXTRA_SYMLINKS defined by
+# the product. Very similar in role to the ramdisk board-defined
+# symlinks created in system/core/rootdir/Android.mk.
+# BOARD_SYSTEM_EXTRA_SYMLINKS is a list of <target>:<link_name>.
+ifdef BOARD_VENDOR_EXTRA_SYMLINKS
+   $(foreach pair, $(BOARD_VENDOR_EXTRA_SYMLINKS), \
+     $(eval target := $(call word-colon,1,$(pair))) \
+     $(eval link_name := $(call word-colon,2,$(pair))) \
+     $(eval full_link_name := $(call append-path,$(PRODUCT_OUT)/$(TARGET_COPY_OUT_VENDOR),$(link_name))) \
+     $(eval $(call create-symlink,$(target),$(full_link_name))) \
+     $(eval ALL_DEFAULT_INSTALLED_MODULES += $(full_link_name)))
+endif
+
+endif
